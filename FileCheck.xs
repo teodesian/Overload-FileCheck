@@ -9,6 +9,10 @@
 *
 */
 
+#ifdef _WIN32
+#define MSWin32
+#endif
+
 #include <EXTERN.h>
 #include <perl.h>
 #include <XSUB.h>
@@ -169,6 +173,7 @@ int _overload_ft_stat(Stat_t *stat, int *size) {
   SV *const arg = *PL_stack_sp;
   int optype = PL_op->op_type;  /* this is the current op_type we are mocking */
   int check_status = -1;        /* 1 -> YES ; 0 -> FALSE ; -1 -> delegate */
+  int null_value = 0;
 
   dSP;
   int count;
@@ -235,8 +240,14 @@ int _overload_ft_stat(Stat_t *stat, int *size) {
       set_stat_from_aryix( stat->st_atime, 8 );     /* NV or IV */
       set_stat_from_aryix( stat->st_mtime, 9 );     /* NV or IV */
       set_stat_from_aryix( stat->st_ctime, 10 );    /* NV or IV */
-      set_stat_from_aryix( stat->st_blksize, 11 );  /* UV or PV */
-      set_stat_from_aryix( stat->st_blocks, 12 );   /* UV or PV */
+      /* _stat* structs doesn't have st_blksize or st_blocks on windows */
+      #ifndef MSWin32
+        set_stat_from_aryix( stat->st_blksize, 11 );  /* UV or PV */
+        set_stat_from_aryix( stat->st_blocks, 12 );   /* UV or PV */
+      #else
+        set_stat_from_aryix( null_value, 11);
+        set_stat_from_aryix( null_value, 12);
+      #endif
     }
 
   }

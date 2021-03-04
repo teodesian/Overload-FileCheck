@@ -17,10 +17,13 @@ use Test2::Plugin::NoWarnings;
 use Overload::FileCheck q{:all};
 use Errno ();
 
+use constant IS_WIN => grep { $^O eq $_ } qw{MSWin32 msys};
+my $tmpdir = IS_WIN ? $ENV{TEMP} : '/tmp';
+
 {
     note "no mocks at this point";
 
-    ok -e q[/tmp],           "/tmp/exits";
+    ok -e $tmpdir,           "$tmpdir/exits";
     ok !-e q[/do/not/exist], "/do/not/exist";
 
     my ( $check, $errno_int );
@@ -106,12 +109,12 @@ use Errno ();
         }
     );
 
-    my $check = -e q[/tmp];
+    my $check = -e $tmpdir;
 
     # do not check the errno string, as it depends on the locale
     my $errno_int = int($!);
 
-    ok !$check, "/tmp does not exist";
+    ok !$check, "$tmpdir does not exist";
     is $errno_int, Errno::EINTR(), "ERRNO int value set to Errno::EINTR()";
 
     unmock_all_file_checks();

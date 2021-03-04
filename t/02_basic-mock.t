@@ -16,12 +16,15 @@ use Test2::Plugin::NoWarnings;
 
 use Overload::FileCheck qw{:all};
 
+use constant IS_WIN => grep { $^O eq $_ } qw{MSWin32 msys};
+my $tmpdir = IS_WIN ? $ENV{TEMP} : '/tmp';
+
 my @calls;
 
 {
     note "no mocks at this point";
 
-    ok -e q[/tmp],           "/tmp/exits";
+    ok -e $tmpdir,           "$tmpdir/exits";
     ok !-e q[/do/not/exist], "/do/not/exist";
 
     is \@calls, [], 'no calls';
@@ -40,9 +43,9 @@ my @calls;
         }
     );
 
-    ok -e q[/tmp],          "/tmp exits";
+    ok -e $tmpdir,          "$tmpdir exists";
     ok -e q[/do/not/exist], "/do/not/exist now exist thanks to mock=1";
-    is \@calls, [qw{/tmp /do/not/exist}], 'got two calls calls';
+    is \@calls, [$tmpdir,q{/do/not/exist}], 'got two calls';
 }
 
 {
@@ -63,7 +66,7 @@ my @calls;
     note "we are mocking -e => CHECK_IS_FALSE";
     mock_file_check( '-e' => sub { CHECK_IS_FALSE } );
 
-    ok !-e q[/tmp], "/tmp does not exist now...";
+    ok !-e $tmpdir, "$tmpdir does not exist now...";
 }
 
 done_testing;

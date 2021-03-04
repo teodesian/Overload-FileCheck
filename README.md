@@ -4,7 +4,7 @@ Overload::FileCheck - override/mock perl file check -X: -e, -f, -d, ...
 
 # VERSION
 
-version 0.010
+version 0.011
 
 # SYNOPSIS
 
@@ -459,7 +459,7 @@ When mocking stat or lstat function your callback function should return one of 
 - either one ARRAY Ref containing 13 entries as described by the stat function (in the same order)
 - or an empty ARRAY Ref, if the file does not exist
 - or one HASH ref using one or more of the following keys: st\_dev, st\_ino, st\_mode, st\_nlink,
-  st\_uid, st\_gid, st\_rdev, st\_size, st\_atime, st\_mtime, st\_ctime, st\_blksiz, st\_blocks
+  st\_uid, st\_gid, st\_rdev, st\_size, st\_atime, st\_mtime, st\_ctime, st\_blksize, st\_blocks
 - or return FALLBACK\_TO\_REAL\_OP when you want to let Perl take back the control for that file
 
 In order to manipulate the ARRAY ref and insert/update one specific entry, some constant are available

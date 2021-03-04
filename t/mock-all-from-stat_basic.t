@@ -17,23 +17,37 @@ use Test2::Plugin::NoWarnings;
 use Overload::FileCheck -from_stat => \&my_stat, qw{:check :stat};
 use Carp;
 
+use constant IS_WIN => grep { $^O eq $_ } qw{MSWin32 msys};
+
 my $fake_files = {
 
     "$0"           => [ stat($0) ],
     'fake.binary'  => stat_as_file( perms => 0755, size => 1000 ),
     'fake.dir'     => stat_as_directory( size => 99 ),
-    'a.symlink'    => stat_as_symlink(),
     'zero'         => fake_stat_zero(),
     'regular.file' => stat_as_file( size => 666 ),
     'empty.file'   => stat_as_file(),
-    'my.socket'    => stat_as_socket(),
 };
+
+$fake_files->{'a.symlink'} = stat_as_symlink() unless IS_WIN;
+$fake_files->{'my.socket'} = stat_as_socket()  unless IS_WIN;
 
 # move to DATA
 foreach my $l (<DATA>) {
     chomp $l;
     if ( $l =~ s{^\s*#}{} ) {
         note $l;
+        next;
+    }
+
+    #Skip symlink and socket tests on windows, they will die
+    next if IS_WIN && $l =~ m/a\.symlink|my\.socket/;
+    if (IS_WIN && $l =~ m/-S|-l/) {
+        # _ is a special case, we won't re-execute the check and die, just return undef.
+        next if $l =~ m/_/;
+        
+        eval $l;
+        like($@, qr/not supported on windows/i, "Checking for symlink or socket on windows dies ($l)");
         next;
     }
 
