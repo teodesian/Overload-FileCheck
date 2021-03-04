@@ -8,8 +8,11 @@ pm_to_blib
 FileCheck.bs
 FileCheck.c
 FileCheck.o
+FileCheck.def
 .gdb_history
 Makefile.old
 MANIFEST.bak
 Overload-FileCheck-*
 .build
+.vscode
+workspace.code-workspace
