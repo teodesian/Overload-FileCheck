@@ -173,7 +173,7 @@ int _overload_ft_stat(Stat_t *stat, int *size) {
   SV *const arg = *PL_stack_sp;
   int optype = PL_op->op_type;  /* this is the current op_type we are mocking */
   int check_status = -1;        /* 1 -> YES ; 0 -> FALSE ; -1 -> delegate */
-  int null_value = 0;
+  UV null_value; /* for use when stat_t doesn't have the needed struct param, like on win32 */
 
   dSP;
   int count;
@@ -240,13 +240,14 @@ int _overload_ft_stat(Stat_t *stat, int *size) {
       set_stat_from_aryix( stat->st_atime, 8 );     /* NV or IV */
       set_stat_from_aryix( stat->st_mtime, 9 );     /* NV or IV */
       set_stat_from_aryix( stat->st_ctime, 10 );    /* NV or IV */
-      /* _stat* structs doesn't have st_blksize or st_blocks on windows */
+
+      /* _stat_t structs doesn't have st_blksize or st_blocks on windows, so just give a null */
       #ifndef MSWin32
         set_stat_from_aryix( stat->st_blksize, 11 );  /* UV or PV */
         set_stat_from_aryix( stat->st_blocks, 12 );   /* UV or PV */
       #else
-        set_stat_from_aryix( null_value, 11);
-        set_stat_from_aryix( null_value, 12);
+        set_stat_from_aryix( null_value, 11); /* UV */
+        set_stat_from_aryix( null_value, 12); /* UV */
       #endif
     }
 

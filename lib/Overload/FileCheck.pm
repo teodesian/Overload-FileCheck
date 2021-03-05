@@ -15,10 +15,10 @@ use warnings;
 use Errno ();
 
 use base 'Exporter';
-use constant IS_WIN => grep { $^O eq $_ } qw{MSWin32 msys};
+use constant MSWin32 => grep { $^O eq $_ } qw{MSWin32 msys};
 
 # Windows only has "hard" links, so Fcntl's emulation via Win32API is limited
-if (IS_WIN) {
+if (MSWin32) {
     use constant S_IFLNK  => undef;
     use constant S_IFSOCK => undef;
 }
@@ -41,7 +41,7 @@ BEGIN {
     push(@fcntl_structs,
         'S_IFLNK',     # symbolic link
         'S_IFSOCK',    # socket
-    ) unless IS_WIN;
+    ) unless MSWin32;
     # qw{S_IRUSR S_IWUSR S_IXUSR S_IRWXU}
 
     require XSLoader;
@@ -421,7 +421,7 @@ sub _check_from_stat {
 
         # -l  File is a symbolic link (false if symlinks aren't
         #    supported by the file system).
-        die "Symlinks not supported on windows" if IS_WIN;
+        die "Symlinks not supported on windows" if MSWin32;
         return _check_mode_type( $lstat[ST_MODE], S_IFLNK );
     }
     elsif ( $check eq 'p' ) {
@@ -432,7 +432,7 @@ sub _check_from_stat {
     elsif ( $check eq 'S' ) {
 
         # -S  File is a socket.
-        die "Socket files not supported on windows" if IS_WIN;
+        die "Socket files not supported on windows" if MSWin32;
         return _check_mode_type( $lstat[ST_MODE], S_IFSOCK );
     }
     elsif ( $check eq 'b' ) {
@@ -635,6 +635,8 @@ sub _check {
         # time_t    st_atime   Time of last access.
         # time_t    st_mtime   Time of last data modification.
         # time_t    st_ctime   Time of last status change.
+
+        # The following 2 will be blank on msWin32 (NTFS/FAT)
         # blksize_t st_blksize A file system-specific preferred I/O block size for
         # blkcnt_t  st_blocks  Number of blocks allocated for this object.
         # ......
@@ -698,13 +700,13 @@ sub stat_as_file {
 
 sub stat_as_symlink {
     my (%opts) = @_;
-    die "Symlinks not supported on windows" if IS_WIN;
+    die "Symlinks not supported on windows" if MSWin32;
     return _stat_for( S_IFLNK, \%opts );
 }
 
 sub stat_as_socket {
     my (%opts) = @_;
-    die "Socket files not supported on windows" if IS_WIN;
+    die "Socket files not supported on windows" if MSWin32;
     return _stat_for( S_IFSOCK, \%opts );
 }
 
@@ -746,7 +748,7 @@ sub _stat_for {
         }
         else {
             # Just leave it be on windows since getpwnam is unimplemented
-            $stat[ST_UID] = getpwnam( $opts->{uid} ) unless IS_WIN;
+            $stat[ST_UID] = getpwnam( $opts->{uid} ) unless MSWin32;
         }
     }
 
@@ -756,7 +758,7 @@ sub _stat_for {
         }
         else {
             # Again, unimplemented on windows, so leave it alone
-            $stat[ST_GID] = getgrnam( $opts->{gid} ) unless IS_WIN;
+            $stat[ST_GID] = getgrnam( $opts->{gid} ) unless MSWin32;
         }
     }
 

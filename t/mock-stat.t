@@ -104,6 +104,9 @@ $expect_stat = [ (0) x Overload::FileCheck::STAT_T_MAX() ];    # fresh stat
 $expect_stat->[ Overload::FileCheck::ST_DEV() ]   = 42;
 $expect_stat->[ Overload::FileCheck::ST_ATIME() ] = 1520000000;
 
+use Data::Dumper;
+print Dumper(stat('hash.stat.2'));
+
 is [ stat('hash.stat.2') ], $expect_stat, "hash.stat.2";
 like(
     dies { [ stat('hash.stat.broken') ] },
