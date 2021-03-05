@@ -61,7 +61,7 @@ foreach my $FILE_CHECK (@chex_mix) {
             ok( !do_dash_check($f, $FILE_CHECK), "-$FILE_CHECK '$f' is false" );
         }
 
-        ok unmock_file_check($FILE_CHECK);
+        ok unmock_file_check($FILE_CHECK), "Unmocked -$FILE_CHECK";
     };
 }
 done_testing;
@@ -70,5 +70,5 @@ exit;
 sub do_dash_check {
     my ($what,$FILE_CHECK) = @_;
     my $c = "-$FILE_CHECK";
-    return eval qq[$c "$what"];
+    return eval "$c q[$what]";
 }

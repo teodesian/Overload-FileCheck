@@ -66,7 +66,6 @@ exit;
 
 sub do_dash_check {
     my ($what, $FILE_CHECK) = @_;
-    # Don't do a stringy eval, as this is not portable with win32 pathnames
     my $c = "-$FILE_CHECK";
-    return scalar eval qq[$c "$what"];
+    return scalar eval "$c q[$what]";
 }
