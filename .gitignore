@@ -16,3 +16,4 @@ Overload-FileCheck-*
 .build
 .vscode
 workspace.code-workspace
+*.swp
