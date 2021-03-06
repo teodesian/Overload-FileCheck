@@ -15,6 +15,7 @@ use Test2::Tools::Explain;
 use Test2::Plugin::NoWarnings;
 
 use Overload::FileCheck qw(CHECK_IS_FALSE CHECK_IS_TRUE FALLBACK_TO_REAL_OP);
+use constant MSWin32 => grep { $^O eq $_ } qw{MSWin32 msys};
 
 my $current_test = "$0";
 
@@ -52,7 +53,7 @@ is $stat_result, $previous_stat_result,
   "stat is the same as previously mocked";
 
 is $last_called_for, $0, q[$0 was the last called to my_stat];
-is $previous_stat_result => fake_stat_for_dollar_0(), "previous stat result as mocked";
+is $previous_stat_result => fake_stat_for_dollar_0(1), "previous stat result as mocked";
 
 like(
     dies { [ stat('too.long') ] },
@@ -85,27 +86,28 @@ foreach my $f (qw{alpha1 alpha2 alpha3}) {
 }
 
 foreach my $d (@FAKE_DIR) {
-    is [ stat($d) ], stat_for_a_directory(), "stat_for_a_directory - $d";
+    is [ stat($d) ], stat_for_a_directory(1), "stat_for_a_directory - $d";
 
     ok !-e $d, "directory $d does not exist";
 }
 
-is [ stat('fake.binary') ], stat_for_a_binary(), "stat_for_a_binary - 'fake.binary'";
-is [ stat('fake.tty') ],    stat_for_a_tty(),    "stat_for_a_tty - 'fake.tty'";
+is [ stat('fake.binary') ], stat_for_a_binary(1), "stat_for_a_binary - 'fake.binary'";
+is [ stat('fake.tty') ],    stat_for_a_tty(1),    "stat_for_a_tty - 'fake.tty'";
 is $last_called_for, 'fake.tty', q[last_called_for fake.tty];
 
 my $expect_stat;
 $expect_stat = [ (0) x Overload::FileCheck::STAT_T_MAX() ];    # fresh stat
 $expect_stat->[ Overload::FileCheck::ST_DEV() ] = 42;
+$expect_stat->[ Overload::FileCheck::ST_BLKSIZE() ] = '' if MSWin32;
+$expect_stat->[ Overload::FileCheck::ST_BLOCKS() ]  = '' if MSWin32;
 
 is [ stat('hash.stat.1') ], $expect_stat, "hash.stat.1";
 
 $expect_stat = [ (0) x Overload::FileCheck::STAT_T_MAX() ];    # fresh stat
 $expect_stat->[ Overload::FileCheck::ST_DEV() ]   = 42;
 $expect_stat->[ Overload::FileCheck::ST_ATIME() ] = 1520000000;
-
-use Data::Dumper;
-print Dumper(stat('hash.stat.2'));
+$expect_stat->[ Overload::FileCheck::ST_BLKSIZE() ] = '' if MSWin32;
+$expect_stat->[ Overload::FileCheck::ST_BLOCKS() ]  = '' if MSWin32;
 
 is [ stat('hash.stat.2') ], $expect_stat, "hash.stat.2";
 like(
@@ -155,6 +157,7 @@ sub my_stat {
 }
 
 sub fake_stat_for_dollar_0 {
+    my $expect = shift;
     return [
         0,
         0,
@@ -167,12 +170,13 @@ sub fake_stat_for_dollar_0 {
         1000,
         2000,
         3000,
-        0,
-        0
+        MSWin32 && $expect ? '' : 0,
+        MSWin32 && $expect ? '' : 0
     ];
 }
 
 sub stat_for_a_directory {
+    my $expect = shift;
     return [
         64769,
         67149975,
@@ -185,12 +189,13 @@ sub stat_for_a_directory {
         1539271725,
         1524671853,
         1524671853,
-        4096,
-        8,
+        MSWin32 && $expect ? '' : 4096,
+        MSWin32 && $expect ? '' : 8,
     ];
 }
 
 sub stat_for_a_binary {
+    my $expect = shift;
     return [
         64769,
         33728572,
@@ -203,12 +208,13 @@ sub stat_for_a_binary {
         1539797896,
         1523421302,
         1526572488,
-        4096,
-        64,
+        MSWin32 && $expect ? '' : 4096,
+        MSWin32 && $expect ? '' : 64,
     ];
 }
 
 sub stat_for_a_tty {
+    my $expect = shift;
     return [
         5,
         1043,
@@ -221,7 +227,7 @@ sub stat_for_a_tty {
         1538428544,
         1538428544,
         1538428550,
-        4096,
-        0,
+        MSWin32 && $expect ? '' : 4096,
+        MSWin32 && $expect ? '' : 0,
     ];
 }
